@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>oracle — permanent memory for your coding agents</title>
+<meta name="description" content="oracle watches your coding-agent sessions and builds a permanent, time-aware memory that answers in milliseconds, locally.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #fff; color: #1a1a1a; line-height: 1.55;
+  }
+  main { max-width: 820px; margin: 0 auto; padding: 4.5rem 1.25rem 5rem; }
+  h1 { font-size: 2.6rem; letter-spacing: -0.03em; font-weight: 700; }
+  .tagline { font-size: 1.2rem; color: #444; margin-top: 0.6rem; max-width: 40em; }
+  .intro { margin-top: 1.6rem; color: #333; max-width: 44em; }
+  img, video { width: 100%; height: auto; display: block; border: 1px solid #e5e5e5; border-radius: 6px; }
+  figure { margin: 3rem 0; }
+  figcaption { font-size: 0.85rem; color: #777; margin-top: 0.6rem; }
+  h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 3rem 0 1rem; color: #555; }
+  pre {
+    background: #fafafa; border: 1px solid #e5e5e5; border-radius: 6px;
+    padding: 1rem 1.2rem; overflow-x: auto; font-size: 0.88rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    line-height: 1.6;
+  }
+  pre .c { color: #888; }
+  a { color: inherit; }
+  footer { margin-top: 4rem; font-size: 0.9rem; color: #777; }
+  @media (max-width: 600px) { h1 { font-size: 2rem; } main { padding-top: 3rem; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>oracle</h1>
+  <p class="tagline">Every coding agent you run forgets everything the moment the
+  session ends. oracle doesn't.</p>
+  <p class="intro">A single local daemon watches your Claude Code and codex
+  sessions, extracts a bi-temporal fact graph — decisions, gotchas, benchmarks,
+  the reason you chose X — and serves it back to any agent in milliseconds.
+  Search, judging, and embeddings run on bundled local models; the only LLM
+  you bring is for fact extraction, and it can be a local one.</p>
+
+  <figure>
+    <img src="assets/graph.png" alt="oracle entity co-mention graph">
+    <figcaption>One user's actual memory: 43,265 facts across 60,697 entities,
+    extracted from 3,644 agent sessions.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="assets/demo.gif" alt="oracle in a terminal: query, time travel, ask, health">
+    <figcaption>Instant search · time travel with <code>--as-of</code> · cited
+    answers · sub-10ms local latency.</figcaption>
+  </figure>
+
+  <h2>Install</h2>
+  <pre><code>curl -fsSL https://raw.githubusercontent.com/efficientsystemsinc/oracle/main/install.sh | sh
+
+<span class="c"># bring any OpenAI-compatible endpoint for extraction:</span>
+export ORACLE_LLM_URL=https://api.openai.com/v1 ORACLE_LLM_KEY=sk-... ORACLE_LLM_MODEL=gpt-5.5
+
+<span class="c"># or fully local — no API key, no cloud at all:</span>
+export ORACLE_LLM_URL=http://localhost:11434/v1 ORACLE_LLM_MODEL=qwen3
+
+oracle init &amp;&amp; oracle up   <span class="c"># watch sessions, serve HTTP on :4141</span></code></pre>
+
+  <h2>Ask it things</h2>
+  <pre><code>oracle query "pgbouncer statement cache"          <span class="c"># the gotcha from three weeks ago</span>
+oracle query --as-of 2026-06-20 "prod topology"   <span class="c"># what was true then</span>
+oracle brief --repo myproject                     <span class="c"># standing brief for a new agent</span>
+oracle ask "why did we move off CloudSQL"         <span class="c"># cited answer with confidence</span></code></pre>
+
+  <footer>
+    MIT-licensed. Source, docs, and model details on
+    <a href="https://github.com/efficientsystemsinc/oracle">GitHub</a>.
+  </footer>
+</main>
+</body>
+</html>
