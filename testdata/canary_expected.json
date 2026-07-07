@@ -1,0 +1,18 @@
+{
+  "01_deploy_gotcha.jsonl": [
+    ["lz4", "gamma-7", "atlasdb"],
+    ["deploy", "install", "depend"],
+    ["pin", "lz4", "4.3.3"]
+  ],
+  "02_benchmark_run.jsonl": [
+    ["hybrid", "0.847", "0.781"],
+    ["hybrid", "default", "retriever"],
+    ["reindex", "overnight", "4 hour"]
+  ],
+  "03_preferences_status.jsonl": [
+    ["python3", "pip3"],
+    ["commit", "main", "branch"],
+    ["mailroom", "kafka", "migrat"],
+    ["delta-2", "decommission"]
+  ]
+}

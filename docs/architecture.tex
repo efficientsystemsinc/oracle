@@ -1,0 +1,82 @@
+\documentclass[tikz,border=14pt]{standalone}
+\usetikzlibrary{positioning,fit,arrows.meta,backgrounds,shapes.multipart,calc,shapes.geometric}
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  box/.style={draw, rounded corners=2pt, fill=blue!8, minimum height=9mm, inner sep=6pt, align=center},
+  store/.style={draw, cylinder, shape border rotate=90, aspect=0.12, fill=orange!15, align=center, inner sep=5pt},
+  ext/.style={draw, rounded corners=2pt, fill=green!10, minimum height=9mm, inner sep=6pt, align=center},
+  llm/.style={draw, rounded corners=2pt, fill=purple!12, minimum height=9mm, inner sep=6pt, align=center},
+  lbl/.style={font=\sffamily\footnotesize, text=black!60},
+  arr/.style={-{Stealth[length=2.5mm]}, thick, black!70},
+  grp/.style={draw, dashed, rounded corners=4pt, inner sep=10pt, black!40}
+]
+
+% ---------------- sources ----------------
+\node[ext] (cc)    {Claude Code sessions\\ \texttt{\footnotesize\char`~/.claude/projects/**/*.jsonl}};
+\node[ext, below=6mm of cc] (codex) {codex sessions\\ \texttt{\footnotesize\char`~/.codex/sessions/**/*.jsonl}};
+\node[lbl, below=2mm of codex] (moresrc) {(+ any future agent, git, Linear\ldots)};
+
+% ---------------- watcher ----------------
+\node[box, right=16mm of $(cc.east)!0.5!(codex.east)$] (watch) {\textbf{watcher}\\ byte-offset tail, every 5 min\\ chunk 24k chars $\cdot$ redact secrets\\ skip \texttt{/private/tmp} sandboxes};
+
+% ---------------- extraction ----------------
+\node[llm, right=14mm of watch] (extract) {\textbf{extractor} (gpt-5.5)\\ atomic durable facts\\ kind $\cdot$ entities $\cdot$ files $\cdot$ conf};
+\node[llm, below=7mm of extract] (judge) {\textbf{supersede judge} (gpt-5.5)\\ new fact vs FTS neighbours\\ same repo+kind};
+\node[llm, above=7mm of extract] (embed) {\textbf{embedder}\\ text-embedding-3-large\\ 512d, batch 32};
+
+% ---------------- graph store ----------------
+\node[store, right=16mm of extract, minimum width=44mm, minimum height=42mm] (db) {};
+\node[anchor=north, font=\sffamily\bfseries] at ([yshift=-2mm]db.north) {\char`~/.oracle/oracle.db};
+\node[anchor=north, align=left, font=\sffamily\footnotesize] at ([yshift=-7mm]db.north) {
+  \textbf{facts} (bi-temporal:\\
+  \ \ valid\_from = world time\\
+  \ \ recorded/superseded = txn)\\
+  \textbf{entities} + co-mention edges\\
+  \textbf{fact\_vecs} (512d blobs)\\
+  \textbf{facts\_fts} (FTS5/bm25)\\
+  \textbf{files} (offsets) $\cdot$ \textbf{traces}};
+
+% ---------------- ranking ----------------
+\node[box, right=14mm of db, minimum width=40mm] (rank) {\textbf{hybrid ranking}\\ RRF(bm25, cosine)\\ $+$ decay mass (7d--365d half-life)\\ $+$ confidence $+$ repo boost\\ retrieval reinforces mass};
+
+% ---------------- surfaces ----------------
+\node[box, right=13mm of rank, fill=red!10] (http) {\textbf{HTTP :4141}\\ /query /ask /brief\\ /entity /facts /health};
+\node[box, above=6mm of http, fill=red!10] (cli) {\textbf{CLI}\\ \texttt{oracle query|ask|brief}\\ \texttt{|entity|--as-of}};
+\node[llm, below=6mm of http] (ask) {\textbf{ask synthesizer}\\ gpt-5.5, answers strictly\\ from facts, cites [id]};
+
+% ---------------- consumers ----------------
+\node[ext, right=12mm of cli] (agents) {coding agents\\ (Claude Code, codex,\\ cursor \ldots via CLAUDE.md)};
+\node[ext, right=12mm of http] (sam) {you};
+
+% ---------------- daemon + future ----------------
+\node[box, below=16mm of db, fill=gray!12] (daemon) {\textbf{launchd} \texttt{com.oracle.daemon}\\ \texttt{oracle up}: serve + ingest loop, KeepAlive};
+\node[box, right=10mm of daemon, fill=yellow!15, dashed] (muzero) {\textbf{next: MuZero planners}\\ read/write policies trained\\ on \texttt{traces} (logged already)};
+
+% ---------------- arrows ----------------
+\draw[arr] (cc) -- (watch);
+\draw[arr] (codex) -- (watch);
+\draw[arr] (watch) -- node[lbl, above]{chunks} (extract);
+\draw[arr] (extract) -- (judge);
+\draw[arr] (extract) -- node[lbl, above]{facts} (db);
+\draw[arr] (judge) -- node[lbl, below right=-1mm]{close validity} (db);
+\draw[arr] (embed) -| ([xshift=-6mm]db.north) ;
+\draw[arr] ([yshift=6mm]db.west) -| node[lbl, left, pos=0.8]{new statements} (embed.south);
+\draw[arr] (db) -- (rank);
+\draw[arr] (rank) -- (http);
+\draw[arr] (rank) |- (cli);
+\draw[arr] (http) -- (ask);
+\draw[arr, <->] (cli) -- (agents);
+\draw[arr, <->] (http) -- (sam);
+\draw[arr] (daemon) -- (db);
+\draw[arr] ([xshift=16mm]db.south) -- ++(0,-5mm) -| node[lbl, above, pos=0.22]{query traces} (muzero.north);
+
+% ---------------- groups ----------------
+\begin{scope}[on background layer]
+\node[grp, fit=(cc)(codex)(moresrc), label={[lbl]above:sources (append-only logs)}] {};
+\node[grp, fit=(extract)(judge)(embed), label={[lbl]above:Azure OpenAI (loud failures, 3-try retry)}] {};
+\node[grp, fit=(cli)(http)(ask), label={[lbl]above:surfaces}] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

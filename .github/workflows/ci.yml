@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: vet
+        run: go vet ./...
+      - name: test
+        run: go test ./...
+      - name: build
+        run: go build -o oracle-bin ./cmd/oracle
+      - name: selfeval regression gate
+        run: |
+          if [ ! -f testdata/fixture.db ]; then
+            echo "no testdata/fixture.db yet — selfeval gate skipped (see testdata/README.md)"
+            exit 0
+          fi
+          python3 scripts/make_synthetic_fixture.py --serve 8901 &
+          sleep 1
+          ./oracle-bin selfeval --fixture testdata/fixture.db --sample 100 --json | tee selfeval.json
+          python3 - <<'EOF'
+          import json, sys
+          ev = json.load(open("selfeval.json"))
+          th = json.load(open("testdata/thresholds.json"))
+          if ev["pairs"] == 0:
+              sys.exit("fixture has no supersession pairs — fixture is broken")
+          era = ev["era_hit"] / ev["pairs"]
+          cont = ev["now_hit"] / ev["pairs"]
+          print(f"era_rate={era:.3f} (min {th['era_rate']})  continuity_rate={cont:.3f} (min {th['continuity_rate']})")
+          if era < th["era_rate"]:
+              sys.exit(f"era hit rate {era:.3f} below threshold {th['era_rate']}")
+          if cont < th["continuity_rate"]:
+              sys.exit(f"continuity hit rate {cont:.3f} below threshold {th['continuity_rate']}")
+          EOF
+        env:
+          ORACLE_HOME: /tmp/oracle-ci-home
+          ORACLE_EMBED_URL: http://127.0.0.1:8901/embeddings

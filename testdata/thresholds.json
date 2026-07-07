@@ -1,0 +1,5 @@
+{
+ "era_rate": 0.9,
+ "continuity_rate": 0.85,
+ "note": "synthetic fixture (scripts/make_synthetic_fixture.py) measures era 40/40, continuity 40/40, citation_recall 1.0, probes 16/16 at generation; thresholds carry a safety margin"
+}

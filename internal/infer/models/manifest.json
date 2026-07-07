@@ -1,0 +1,30 @@
+{
+ "release_tag": "models-v1",
+ "repo": "efficientsystemsinc/oracle",
+ "assets": {
+  "judge_v2_onnx": {
+   "file": "judge_v2_onnx.tgz",
+   "sha256": "9d869f298b82e19efe6541f4f3ba10fb672672970e6f869b273088c7d9b0ccaf"
+  },
+  "embedder_v3_onnx": {
+   "file": "embedder_v3_onnx.tgz",
+   "sha256": "87911eee0492a4119b2c4f4e5f4ed90dde80e1cd67bd95a3b783a5411514b445"
+  },
+  "lib": {
+   "file": "mlx_lib.tgz",
+   "sha256": "a35a4f3ca0c2005244519677b7e72c3e5f8ef00b84578da5a66fb0a1cdad5c9a"
+  },
+  "judge_v3_onnx": {
+   "file": "judge_v3_onnx.tgz",
+   "sha256": "e9d1784e9f7da3db511c19c32d17a1bdd57550de84f90bb73eb32f2b9a55c6ab"
+  },
+  "policy_mlx": {
+   "file": "policy_mlx.tgz",
+   "sha256": "372d56bfe282071bf9d4d3f15c50936407f19b7f6a50c6152fd456cf8f3677db"
+  },
+  "synth_mlx": {
+   "file": "synth_mlx.tgz",
+   "sha256": "d7fd9978d70d21fb66019a903373a41bcc1b12a72829c0d3af7f92edd3ba401a"
+  }
+ }
+}

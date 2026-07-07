@@ -1,0 +1,39 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          # cgo (onnxruntime_go) => native builds only, one runner per target
+          - os: ubuntu-latest
+            target: linux-amd64
+          - os: macos-14 # Apple Silicon runner; onnxruntime itself ships at runtime via `oracle models pull` (or brew install onnxruntime)
+            target: darwin-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: build
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist/bin
+          go build -trimpath -ldflags "-s -w" -o dist/bin/oracle ./cmd/oracle
+          tar -czf "dist/oracle-${{ matrix.target }}.tar.gz" -C dist/bin oracle
+      - name: attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "binaries-$VERSION" --title "oracle $VERSION" \
+            --notes "oracle $VERSION — install via install.sh" || true
+          gh release upload "binaries-$VERSION" "dist/oracle-${{ matrix.target }}.tar.gz" --clobber

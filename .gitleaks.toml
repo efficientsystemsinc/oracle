@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "watch_test.go contains deliberately fake secrets that exercise the redact() scrubber"
+paths = ['''watch_test\.go''']

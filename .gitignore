@@ -1,0 +1,17 @@
+scripts/.venv-mlx/
+cpp/oraclemlx/build/
+.claude/
+.worktrees/
+bench_home/
+/oracle
+chunks.jsonl
+# personal eval probes (mined from your own session graph — never public)
+eval/probes.mine*.tsv
+eval/probes_1k.tsv
+eval/probes_mined.tsv
+eval/probes.*.tsv
+eval/ask_confidence_probes.json
+keys.env
+oracle.egg-info/
+__pycache__/
+/oracle-bin

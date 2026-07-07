@@ -1,0 +1,16 @@
+[project]
+name = "oracle"
+version = "0.1.0"
+description = "Bi-temporal fact graph over all agent sessions. Watch, extract, decay, serve."
+requires-python = ">=3.11"
+dependencies = ["fastapi", "uvicorn"]
+
+[project.scripts]
+oracle = "oracle.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["oracle*"]
