@@ -16,7 +16,6 @@ never model size.
 ## In training / staged
 
 - **extract/** — chunk→facts distillation (Qwen2.5 1.5B vs 0.5B LoRA, A100 A/B in flight); gate = teacher-match on 150 held-out chunks; serve via mlx-lm convert behind `ORACLE_LOCAL_EXTRACT`
-- **datagen/** — rewrite (12k excerpt→fact), trajectories (8k multi-hop tool paths), screener (chunk-yield labels)
 - **policy/** — read-policy BC on ask trajectories (data accumulating)
 
 ## House rules
