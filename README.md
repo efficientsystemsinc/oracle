@@ -155,33 +155,35 @@ regex-redacted before leaving the box.
 
 `prototype/` holds the retired Python v0 — reference only.
 
-## Local models
+## The models
 
-One command provisions everything the local judge/embedder need, on any
-platform:
+oracle ships its own models — small, purpose-trained, and run entirely on your
+machine (MLX on Apple silicon, ONNX Runtime everywhere else). This is the core
+design bet: memory infrastructure should not rent intelligence per query.
+
+| model | size | job | how it runs |
+|---|---|---|---|
+| **embedder** | 110M | turns every query and fact into vectors for semantic search — beat a leading hosted embedding API on-domain (81.5 vs 79.7 hit@5) | in-process, ~11ms on Metal; powers every `query` |
+| **judge** | 110M | the write-path referee: does a new fact *supersede*, *contradict*, or *coexist with* an old one — the mechanism behind time travel | shadow mode by default (`ORACLE_LOCAL_JUDGE=shadow\|active`, margin-gated escalation to your LLM) |
+| **ask policy** | 0.5B | plans multi-hop retrieval for `ask`: which searches to run, which entities to follow, when to stop | `ORACLE_ASK_LOCAL=1`, 4-bit via mlx_lm server |
+| **ask synthesis** | 1.5B | writes the final cited answer from gathered facts | same local mode — zero remote calls end to end |
+| **MLX runtime** | — | hand-built Metal engine (full bert forward, fp16, compiled/fused) + GPU-resident vector store: 10–19x over CPU inference, whole-query p50 ~11ms | automatic with `ORACLE_MLX=1` on Apple silicon |
+
+All were trained by distillation on this system's own data: the deployed
+extraction prompt is the teacher, synthetic hard cases fill distribution gaps,
+and every model passed in- and out-of-distribution eval gates before earning a
+flag (the ones that didn't pass ship default-off, with their numbers in
+`docs/history.md` — the gates are public too).
 
 ```sh
-oracle models pull    # weights (release-pinned, sha256-gated) + onnxruntime
+oracle models pull    # fetch all weights (release-pinned, sha256-verified) + onnxruntime
 oracle models         # what's present vs missing
 ```
 
-Weights come from the GitHub release the checked-out commit pins in
-`internal/infer/models/manifest.json` (auth: `gh auth login` once, or `GITHUB_TOKEN`); the
-ONNX Runtime library comes from the official public release when no system
-copy exists (into `~/.oracle/lib`, `ORT_DYLIB` overrides). The MLX Metal
-bundle is skipped off-macOS. Pull is incremental — `--force` re-downloads.
+Your extraction LLM (the one thing you bring) improves the graph; the graph
+generates training data; the models get smaller and closer to the metal. That
+loop is the roadmap.
 
-Then:
-
-```sh
-ORACLE_LOCAL_EMBED=1 oracle reembed   # build local-model vectors (resumable)
-ORACLE_LOCAL_EMBED=1 oracle query …   # serve queries on them
-ORACLE_LOCAL_JUDGE=shadow oracle up   # log local-judge agreement, LLM decides
-oracle judgestats                     # agreement report; `active` gates on it
-```
-
-Linux runs the ONNX CPU path as a first-class citizen; the MLX engine below
-is an optional accelerator for Apple Metal.
 
 ## MLX inference engine (Apple Metal)
 
