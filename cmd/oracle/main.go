@@ -398,6 +398,7 @@ func cmdAsk(db *sql.DB, args []string) {
 	fs := newFlagSet("ask")
 	repo := fs.String("repo", "", "boost facts from this repo")
 	asOf := fs.String("as-of", "", "ISO date: answer from knowledge as of then")
+	asJSON := fs.Bool("json", false, "machine output: {answer, confidence, abstained, sources}")
 	qtext := parseWithPositional(fs, args)
 	if qtext == "" {
 		fs.Usage()
@@ -407,6 +408,12 @@ func cmdAsk(db *sql.DB, args []string) {
 	answer, hits, conf, err := ask.AskAuto(db, qtext, *repo, asOfTs)
 	if err != nil {
 		fatal(err)
+	}
+	if *asJSON {
+		b, _ := json.MarshalIndent(map[string]any{"answer": answer, "confidence": conf.Score,
+			"abstained": conf.Abstained, "sources": hits}, "", " ")
+		fmt.Println(string(b))
+		return
 	}
 	fmt.Println(answer)
 	fmt.Printf("\nconfidence: %.2f\n", conf.Score)

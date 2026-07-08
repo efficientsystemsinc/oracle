@@ -5,6 +5,66 @@ watches Claude Code + codex session logs, extracts durable facts with any OpenAI
 links them into an entity graph with decay + supersession, and serves the
 result over HTTP + CLI. Coding agents query it for perfect context.
 
+
+## Ask it anything about your own history
+
+`ask` is the heart of oracle: a multi-hop reasoner that plans retrieval over the
+graph — reformulating searches, following entities, comparing time periods —
+then answers with citations into your own facts.
+
+```
+$ oracle ask "why did we switch the prod database, and what broke during the migration?"
+
+The database moved because connection pooling collapsed under the indexer's
+write bursts [4821]. The migration hit one failure: prepared-statement caching
+had to be disabled behind the transaction pooler [4903] — as of Jun 16 that
+setting is required in every client [5122].
+
+confidence: 0.87
+-- sources --
+[4821] (decision, api, 32d) The backing store moved to managed Postgres because...
+[4903] (gotcha,   api, 30d) Clients behind the pooler must disable statement caching...
+[5122] (fact,     api,  9d) All services now set statement_cache_size=0...
+```
+
+Every claim carries a fact id you can inspect (`oracle graph entity <name>`,
+`GET /facts/{id}`). Answers are **calibrated**: a confidence score is computed
+from citation coverage and retrieval strength, and below threshold oracle
+prefixes the answer with `LOW CONFIDENCE` instead of guessing — on a blind
+holdout it produced zero confidently-wrong answers.
+
+Time travel works here too: `oracle ask --as-of 2026-06-01 "..."` answers from
+what was true *then*, using facts that have since been superseded.
+
+An experimental fully-local mode (`ORACLE_ASK_LOCAL=1`) runs the entire loop —
+planning and answer synthesis — on bundled small models with zero remote
+calls, at about 3x the speed and ~70% of the answer quality of the remote loop.
+
+## Ask your own history
+
+`ask` is the heart of oracle: a multi-hop reasoner that plans retrieval over
+the graph — reformulating searches, following entities, comparing time
+periods — and answers with citations into your own facts.
+
+```
+$ oracle ask "why did we switch the prod database, and what broke?"
+
+The database moved because connection pooling collapsed under the indexer's
+write bursts [4821]. One gotcha survived the migration: prepared-statement
+caching must stay disabled behind the transaction pooler [4903] — as of
+Jun 16 every client sets it explicitly [5122].
+
+confidence: 0.87
+```
+
+Every claim cites a fact id you can inspect. Confidence is calibrated from
+citation coverage and retrieval strength — below threshold, oracle says
+LOW CONFIDENCE instead of guessing (zero confidently-wrong answers on a blind
+holdout). `--as-of` answers from what was true at any past date. `--json`
+returns `{answer, confidence, sources[]}` for agents that want both the
+answer and the underlying facts. An experimental `ORACLE_ASK_LOCAL=1` mode
+runs the whole loop on bundled small models with zero remote calls.
+
 ## Install
 
 ```sh
