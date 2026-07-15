@@ -65,3 +65,9 @@ store/db.go + store/schemas.go                ├─→ search/graph.go(search) 
 - `prototype/` is the retired Python v0 — reference only, don't extend it.
 - `docs/facts.md` documents the fact model; `docs/architecture.tex` the system.
 - `install-daemon` branches on OS: launchd plist on macOS, systemd user unit on Linux (needs `loginctl enable-linger` to survive logout). README's install path (`/opt/homebrew/bin`) is macOS-specific.
+
+<!-- efficient-systems:research-standard-pointer:start -->
+## Research communication standard
+
+`AGENTS.md` contains the mandatory research communication and reproducibility standard for Claude and every other agent in this repository. Read and apply it before making claims, reporting validation, or publishing experimental results. Repository-specific instructions in this file are additive.
+<!-- efficient-systems:research-standard-pointer:end -->
